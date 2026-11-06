@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Prueba cotizador</title>
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Prueba cotizador">
+<link rel="apple-touch-icon" href="icono.png">
+<meta name="theme-color" content="#1d2125">
+<style>
+:root { --bg:#f6f5f2; --surface:#fff; --fg:#1d2125; --muted:#5d646b; --line:#dcd9d2; --accent:#a86a00; --accent-soft:#f6ead2; --ok:#2f6b3f; --ok-soft:#e2efe5; --no:#9a3b2e; --no-soft:#f5e3df;
+  --body: -apple-system, "Segoe UI", Roboto, sans-serif; }
+@media (prefers-color-scheme: dark) { :root { --bg:#15181b; --surface:#1d2125; --fg:#e9e7e2; --muted:#a3a9ae; --line:#33393e; --accent:#e8a93a; --accent-soft:#3a2c12; --ok:#8cc79a; --ok-soft:#1d3324; --no:#e59a8c; --no-soft:#3a211c; color-scheme: dark; } }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45;
+  padding: env(safe-area-inset-top) max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left)); }
+h1 { font-size: 1.3rem; margin: 10px 0 4px; }
+h2 { font-size: 1.05rem; margin: 0; }
+.bar { position: sticky; top: env(safe-area-inset-top); z-index: 5; margin: 8px 0 12px; padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; display: grid; gap: 2px; }
+.bar.on { background: var(--ok-soft); color: var(--ok); }
+.bar.off { background: var(--no-soft); color: var(--no); }
+.bar b { font-size: 0.95rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; gap: 10px; margin-bottom: 12px; }
+.muted { color: var(--muted); font-size: 0.88rem; }
+button { font: inherit; border: 0; border-radius: 8px; padding: 11px 14px; background: var(--fg); color: var(--bg); font-weight: 600; }
+button.sec { background: var(--accent-soft); color: var(--accent); }
+button:disabled { opacity: 0.45; }
+input, select { font: inherit; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg); }
+.prog { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.prog i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.res { display: grid; gap: 8px; }
+.art { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.art img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; background: var(--line); }
+.art .d { font-weight: 600; font-size: 0.95rem; }
+.art .c { font-size: 0.8rem; color: var(--muted); }
+.art .pr { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.art button { padding: 8px 10px; margin-top: 4px; }
+.line { display: grid; grid-template-columns: 1fr 64px 64px; gap: 6px; align-items: center; font-size: 0.9rem; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.line input { padding: 6px; text-align: right; }
+.tot { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pill { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.pill.pend { background: var(--accent-soft); color: var(--accent); }
+.pill.env { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--no-soft); color: var(--no); }
+.q { border-bottom: 1px solid var(--line); padding-block: 8px; display: grid; gap: 3px; font-size: 0.92rem; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: 0.92rem; max-width: 90%; }
+</style>
+</head>
+<body>
+<h1>Prueba de cotizador sin señal</h1>
+<p class="muted">Datos de ejemplo: artículos, precios y fotos inventados.</p>
+
+<div id="bar" class="bar on"><b id="barT">Verificando conexión…</b><span id="barS"></span></div>
+
+<div class="card" id="prep">
+  <h2>1. Preparar para usar sin señal</h2>
+  <p class="muted" id="prepTxt">Hacelo una vez, con señal y desde el ícono de la pantalla de inicio. Baja las 2000 fotos al celular.</p>
+  <div class="prog"><i id="progBar"></i></div>
+  <button id="prepBtn">Descargar fotos</button>
+  <p class="muted" id="espacio"></p>
+</div>
+
+<div class="card">
+  <h2>2. Cotizar</h2>
+  <div class="row">
+    <select id="cliente"><option>Frigorífico del Norte</option><option>Lácteos Guaraní</option><option>Molinos Itapúa</option><option>Cerámica Central</option></select>
+    <select id="moneda"><option value="USD">Dólares</option><option value="PYG">Guaraníes</option></select>
+  </div>
+  <input id="buscar" type="search" placeholder="Buscar: bomba, grasa, ILC-10500…" autocomplete="off">
+  <div class="res" id="res"></div>
+</div>
+
+<div class="card" id="cotCard">
+  <h2>Cotización en armado</h2>
+  <div id="lineas" class="muted">Todavía no agregaste artículos.</div>
+  <div class="tot"><span>Total</span><span id="total">—</span></div>
+  <p class="muted">Descuento hasta <span id="escala"></span>% sin aprobación.</p>
+  <button id="guardar" disabled>Guardar cotización</button>
+</div>
+
+<div class="card">
+  <h2>3. Cotizaciones guardadas</h2>
+  <div id="guardadas" class="muted">Ninguna todavía.</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
